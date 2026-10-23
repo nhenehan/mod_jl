@@ -1,0 +1,98 @@
+# httpd for tests/httpd/test_lb.sh: three JlServ workers (lb_app.jl) on
+# @WORK@/j{1,2,3}.sock, and two that never run (jd1, jd2), behind one
+# JlBalancer per scenario, each on its own prefix. @MPM@ is event or prefork.
+ServerRoot "@WORK@"
+DefaultRuntimeDir "@WORK@/run"
+PidFile "@WORK@/run/httpd.pid"
+Mutex file:@WORK@/run default
+ServerName localhost
+Listen 127.0.0.1:@PORT@
+
+LoadModule mpm_@MPM@_module /usr/lib/apache2/modules/mod_mpm_@MPM@.so
+# Without an authz module httpd refuses every request ("couldn't check user").
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule slotmem_shm_module /usr/lib/apache2/modules/mod_slotmem_shm.so
+LoadModule jl_module "@MODULE@"
+
+<IfModule mpm_event_module>
+    StartServers 1
+    ServerLimit 1
+    ThreadsPerChild 16
+    MaxRequestWorkers 16
+</IfModule>
+# Several children, and a new connection for each request, so requests
+# spread over processes: what one child learns, the others must see.
+<IfModule mpm_prefork_module>
+    StartServers 4
+    MinSpareServers 4
+    MaxSpareServers 4
+    ServerLimit 4
+    MaxRequestWorkers 4
+    KeepAlive Off
+</IfModule>
+Timeout 60
+
+ErrorLog "@WORK@/error_log"
+LogLevel warn jl:trace1
+LogFormat "%h \"%r\" %>s %b %D" t
+CustomLog "@WORK@/access_log" t
+DocumentRoot "@WORK@/htdocs"
+
+JlWorker j1 unix:@WORK@/j1.sock secret=@SECRET@ fail_on_status=503,-500
+JlWorker j2 unix:@WORK@/j2.sock secret=@SECRET@ fail_on_status=503,-500
+JlWorker j3 unix:@WORK@/j3.sock secret=@SECRET@ fail_on_status=503,-500
+JlWorker jd1 unix:@WORK@/nobody1.sock retries=1
+JlWorker jd2 unix:@WORK@/nobody2.sock retries=1
+
+# One per method, lbfactors 1:1:2.
+JlBalancer lbreq method=Requests recover_time=2
+JlBalancerMember lbreq j1
+JlBalancerMember lbreq j2
+JlBalancerMember lbreq j3 lbfactor=2
+JlBalancer lbtraffic method=Traffic recover_time=2
+JlBalancerMember lbtraffic j1
+JlBalancerMember lbtraffic j2
+JlBalancerMember lbtraffic j3 lbfactor=2
+JlBalancer lbbusy method=Busyness recover_time=2
+JlBalancerMember lbbusy j1
+JlBalancerMember lbbusy j2
+JlBalancerMember lbbusy j3 lbfactor=2
+JlBalancer lbnext method=Next recover_time=2
+JlBalancerMember lbnext j1
+JlBalancerMember lbnext j2
+JlBalancerMember lbnext j3 lbfactor=2
+
+# Activation: j2 disabled (sticky only), j3 stopped.
+JlBalancer lbact recover_time=2
+JlBalancerMember lbact j1
+JlBalancerMember lbact j2 activation=D
+JlBalancerMember lbact j3 activation=S
+
+# Distance: the near members are down, so the far one serves.
+# Two dead members come first: three tries reach the far one.
+JlBalancer lbfar recover_time=2 retries=3
+JlBalancerMember lbfar jd1
+JlBalancerMember lbfar jd2
+JlBalancerMember lbfar j3 distance=1
+JlBalancer lbnear recover_time=2
+JlBalancerMember lbnear j1
+JlBalancerMember lbnear j3 distance=1
+
+# A member that is down, sessions pinned to it, with and without force.
+JlBalancer lbfail recover_time=2
+JlBalancerMember lbfail jd1
+JlBalancerMember lbfail j1
+JlBalancerMember lbfail j2
+JlBalancer lbforce sticky_session_force=on recover_time=2
+JlBalancerMember lbforce jd1
+JlBalancerMember lbforce j2
+
+JlMount /req/* lbreq
+JlMount /traffic/* lbtraffic
+JlMount /busy/* lbbusy
+JlMount /next/* lbnext
+JlMount /act/* lbact
+JlMount /far/* lbfar
+JlMount /near/* lbnear
+JlMount /fail/* lbfail
+JlMount /force/* lbforce

@@ -1,0 +1,56 @@
+# httpd for the module tests. tests/httpd/run-httpd.sh fills in @WORK@, @PORT@,
+# @MODULE@ and @SECRET@ and runs it as the invoking user.
+ServerRoot "@WORK@"
+DefaultRuntimeDir "@WORK@/run"
+PidFile "@WORK@/run/httpd.pid"
+Mutex file:@WORK@/run default
+ServerName localhost
+Listen 127.0.0.1:@PORT@
+
+LoadModule mpm_event_module /usr/lib/apache2/modules/mod_mpm_event.so
+# Without an authz module httpd refuses every request ("couldn't check user").
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule jl_module "@MODULE@"
+
+StartServers 1
+ServerLimit 1
+ThreadsPerChild 16
+MaxRequestWorkers 16
+Timeout 60
+# The 1 GiB upload test would sit exactly on httpd's default limit.
+LimitRequestBody 0
+
+ErrorLog "@WORK@/error_log"
+LogLevel warn jl:debug
+LogFormat "%h \"%r\" %>s %b %D" t
+CustomLog "@WORK@/access_log" t
+DocumentRoot "@WORK@/htdocs"
+
+JlWorker j1 unix:@WORK@/j1.sock secret=@SECRET@ @J1OPTS@
+JlWorker jdown unix:@WORK@/nobody.sock connect_timeout=2
+JlWorker jbad unix:@WORK@/j1.sock secret=wrong
+JlWorker jtcp tcp://127.0.0.1:@TCPPORT@ secret=@SECRET@
+
+JlMount /hello/* j1
+JlMount /whoami j1
+JlMount /headers j1
+JlMount /echo j1
+JlMount /count j1
+JlMount /bytes/* j1
+JlMount /stream/* j1
+JlMount /sleep/* j1
+JlMount /boom j1
+JlMount /status/* j1
+JlMount /missing/* j1
+JlMount /order j1
+JlMount /zeros/* j1
+JlMount /reject j1
+JlMount /fail-after/* j1
+JlMount /fail-after-cl/* j1
+JlMount /down jdown
+JlMount /badsecret jbad
+JlMount /tcp/* jtcp
+
+<Location "/viaset">
+    SetHandler jl:j1
+</Location>

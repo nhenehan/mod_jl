@@ -1,0 +1,16 @@
+<HttpRequest>
+  <Method>POST</Method>
+  <URI>42</URI>
+  <Version>11</Version>
+  <Headers>
+    <StandardHeader>
+      <Name>Content-Type</Name>
+      <Value>application/octet-stream</Value>
+    </StandardHeader>
+    <CustomHeader>
+      <Name>X-Trace</Name>
+      <Value>abc123</Value>
+    </CustomHeader>
+  </Headers>
+  <Body>SGVsbG8gV29ybGQ=</Body> <!-- base64 for: "Hello World" -->
+</HttpRequest>

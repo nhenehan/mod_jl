@@ -1,0 +1,27 @@
+# A template unit for several JlServ instances of one application:
+#   systemctl enable --now jlserv@1 jlserv@2 jlserv@3
+# Instance N listens on /run/myapp/jN.sock, as sticky-round-robin.conf expects.
+[Unit]
+Description=JlServ worker %i for myapp
+After=network.target
+
+[Service]
+User=myapp
+# httpd's group, so it can reach the sockets (created with mode 0660).
+Group=www-data
+# JL_SECRET=... in a file only root can read.
+EnvironmentFile=/etc/myapp/secret
+WorkingDirectory=/srv/myapp
+ExecStart=/usr/bin/julia --startup-file=no --project=/srv/myapp -t 8,1 --gcthreads=4,1 \
+    /srv/mod_jl/jl_serv/JlServ/bin/jlserv app.jl --unix /run/myapp/j%i.sock --name j%i --warmup /
+# Shared by the instances, and kept while any of them runs.
+RuntimeDirectory=myapp
+RuntimeDirectoryPreserve=yes
+# SIGINT drains gracefully; SIGTERM (the default) kills at once.
+KillSignal=SIGINT
+# Longer than the 30 s drain timeout.
+TimeoutStopSec=40
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

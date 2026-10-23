@@ -1,0 +1,36 @@
+# mod_jl development container: httpd + APR dev headers, a C toolchain, Rust (to
+# build rexi-capi), Julia 1.12.7 (JlServ), and load-testing tools.
+# Build and use it with ct/dev.sh; sources are bind-mounted, not copied.
+
+FROM docker.io/library/debian:trixie-slim
+
+ARG JULIA_VERSION=1.12.7
+ARG JULIA_MINOR=1.12
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl git xz-utils \
+        build-essential cmake ninja-build pkg-config gdb valgrind clang-format \
+        apache2 apache2-dev libapr1-dev libaprutil1-dev \
+        wrk nghttp2-client iproute2 procps less \
+    && rm -rf /var/lib/apt/lists/*
+
+# Julia, pinned to the version the JlServ manifest was resolved with.
+RUN curl -fsSL https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_MINOR}/julia-${JULIA_VERSION}-linux-x86_64.tar.gz \
+        | tar -xz -C /opt \
+    && ln -s /opt/julia-${JULIA_VERSION}/bin/julia /usr/local/bin/julia
+
+# Rust, for rexi-capi (rust-version 1.88, edition 2024).
+ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
+RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable \
+    && chmod -R a+rwX /opt/rustup /opt/cargo
+
+# jq, for the jl-status tests. A layer of its own, so adding it kept the ones
+# above.
+RUN apt-get update && apt-get install -y --no-install-recommends jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Debian's apache2 runs as www-data with its own config; the tests use their own
+# config under build-*/t, started as the invoking user.
+ENV JULIA_DEPOT_PATH=/depot/julia
+
+WORKDIR /src/mod_jl

@@ -1,0 +1,8 @@
+<SendHeaders xmlns="urn:jl:proto:2" reason="OK" status="200">
+  <Headers>
+    <H n="content-type">text/plain; charset=utf-8</H>
+    <H n="set-cookie">a=1</H>
+    <H n="set-cookie">b=2</H>
+    <X n="X-Powered-By">JlServ</X>
+  </Headers>
+</SendHeaders>

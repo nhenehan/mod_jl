@@ -1,0 +1,2 @@
+# Suppressions for tests/vg.sh. Add an entry only for noise seen in practice,
+# with a note on where it comes from.

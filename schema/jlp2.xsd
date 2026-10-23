@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  jlp2: HTTP-as-XML, version 2. The vocabulary carried between mod_jl (Apache
+  httpd) and JlServ (Julia) as strict, schema-informed, byte-aligned EXI, one
+  document per frame. See ../README.md for the framing.
+
+  Rules for editing:
+  - Enumeration ordinals are schema order and are generated into C and Julia by
+    tools/gen.jl. Adding, removing or reordering a value is a protocol change:
+    the schema SHA-256 changes and HELLO rejects mismatched peers.
+  - BodyChunk must stay a global element of simple type base64Binary with no
+    attributes: both sides write and read it with a fixed byte template.
+  - Attribute order in the instance is EXI order (sorted by local name), not the
+    order written here.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:j="urn:jl:proto:2"
+           targetNamespace="urn:jl:proto:2"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <!-- ===== Simple types ===== -->
+
+  <!-- Known methods, in AJP code order, then extras. Others use ExtMethod. -->
+  <xs:simpleType name="MethodName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="OPTIONS"/>
+      <xs:enumeration value="GET"/>
+      <xs:enumeration value="HEAD"/>
+      <xs:enumeration value="POST"/>
+      <xs:enumeration value="PUT"/>
+      <xs:enumeration value="DELETE"/>
+      <xs:enumeration value="TRACE"/>
+      <xs:enumeration value="PROPFIND"/>
+      <xs:enumeration value="PROPPATCH"/>
+      <xs:enumeration value="MKCOL"/>
+      <xs:enumeration value="COPY"/>
+      <xs:enumeration value="MOVE"/>
+      <xs:enumeration value="LOCK"/>
+      <xs:enumeration value="UNLOCK"/>
+      <xs:enumeration value="ACL"/>
+      <xs:enumeration value="REPORT"/>
+      <xs:enumeration value="VERSION-CONTROL"/>
+      <xs:enumeration value="CHECKIN"/>
+      <xs:enumeration value="CHECKOUT"/>
+      <xs:enumeration value="UNCHECKOUT"/>
+      <xs:enumeration value="SEARCH"/>
+      <xs:enumeration value="MKWORKSPACE"/>
+      <xs:enumeration value="UPDATE"/>
+      <xs:enumeration value="LABEL"/>
+      <xs:enumeration value="MERGE"/>
+      <xs:enumeration value="BASELINE-CONTROL"/>
+      <xs:enumeration value="MKACTIVITY"/>
+      <xs:enumeration value="PATCH"/>
+      <xs:enumeration value="CONNECT"/>
+      <xs:enumeration value="QUERY"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Known header names, lowercase canonical form. Others use X (or R). -->
+  <xs:simpleType name="HeaderName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="accept"/>
+      <xs:enumeration value="accept-charset"/>
+      <xs:enumeration value="accept-encoding"/>
+      <xs:enumeration value="accept-language"/>
+      <xs:enumeration value="accept-ranges"/>
+      <xs:enumeration value="access-control-allow-credentials"/>
+      <xs:enumeration value="access-control-allow-headers"/>
+      <xs:enumeration value="access-control-allow-methods"/>
+      <xs:enumeration value="access-control-allow-origin"/>
+      <xs:enumeration value="access-control-expose-headers"/>
+      <xs:enumeration value="access-control-max-age"/>
+      <xs:enumeration value="access-control-request-headers"/>
+      <xs:enumeration value="access-control-request-method"/>
+      <xs:enumeration value="age"/>
+      <xs:enumeration value="allow"/>
+      <xs:enumeration value="authorization"/>
+      <xs:enumeration value="cache-control"/>
+      <xs:enumeration value="connection"/>
+      <xs:enumeration value="content-disposition"/>
+      <xs:enumeration value="content-encoding"/>
+      <xs:enumeration value="content-language"/>
+      <xs:enumeration value="content-length"/>
+      <xs:enumeration value="content-location"/>
+      <xs:enumeration value="content-range"/>
+      <xs:enumeration value="content-security-policy"/>
+      <xs:enumeration value="content-type"/>
+      <xs:enumeration value="cookie"/>
+      <xs:enumeration value="date"/>
+      <xs:enumeration value="dnt"/>
+      <xs:enumeration value="etag"/>
+      <xs:enumeration value="expect"/>
+      <xs:enumeration value="expires"/>
+      <xs:enumeration value="forwarded"/>
+      <xs:enumeration value="host"/>
+      <xs:enumeration value="if-match"/>
+      <xs:enumeration value="if-modified-since"/>
+      <xs:enumeration value="if-none-match"/>
+      <xs:enumeration value="if-range"/>
+      <xs:enumeration value="if-unmodified-since"/>
+      <xs:enumeration value="keep-alive"/>
+      <xs:enumeration value="last-modified"/>
+      <xs:enumeration value="link"/>
+      <xs:enumeration value="location"/>
+      <xs:enumeration value="max-forwards"/>
+      <xs:enumeration value="origin"/>
+      <xs:enumeration value="pragma"/>
+      <xs:enumeration value="priority"/>
+      <xs:enumeration value="proxy-authenticate"/>
+      <xs:enumeration value="proxy-authorization"/>
+      <xs:enumeration value="range"/>
+      <xs:enumeration value="referer"/>
+      <xs:enumeration value="referrer-policy"/>
+      <xs:enumeration value="retry-after"/>
+      <xs:enumeration value="sec-ch-ua"/>
+      <xs:enumeration value="sec-ch-ua-mobile"/>
+      <xs:enumeration value="sec-ch-ua-platform"/>
+      <xs:enumeration value="sec-fetch-dest"/>
+      <xs:enumeration value="sec-fetch-mode"/>
+      <xs:enumeration value="sec-fetch-site"/>
+      <xs:enumeration value="sec-fetch-user"/>
+      <xs:enumeration value="server"/>
+      <xs:enumeration value="server-timing"/>
+      <xs:enumeration value="set-cookie"/>
+      <xs:enumeration value="strict-transport-security"/>
+      <xs:enumeration value="te"/>
+      <xs:enumeration value="trailer"/>
+      <xs:enumeration value="transfer-encoding"/>
+      <xs:enumeration value="upgrade"/>
+      <xs:enumeration value="upgrade-insecure-requests"/>
+      <xs:enumeration value="user-agent"/>
+      <xs:enumeration value="vary"/>
+      <xs:enumeration value="via"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="www-authenticate"/>
+      <xs:enumeration value="x-content-type-options"/>
+      <xs:enumeration value="x-forwarded-for"/>
+      <xs:enumeration value="x-forwarded-host"/>
+      <xs:enumeration value="x-forwarded-proto"/>
+      <xs:enumeration value="x-frame-options"/>
+      <xs:enumeration value="x-request-id"/>
+      <xs:enumeration value="x-requested-with"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- 100..999: a bounded range, so EXI writes it as a 10-bit n-bit integer. -->
+  <xs:simpleType name="Status">
+    <xs:restriction base="xs:unsignedShort">
+      <xs:minInclusive value="100"/>
+      <xs:maxInclusive value="999"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ===== Headers: one ordered list ===== -->
+
+  <xs:complexType name="KnownHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="n" type="j:HeaderName" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="OtherHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="n" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- A header whose name or value is not UTF-8 (obs-text): raw bytes. -->
+  <xs:complexType name="RawHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:base64Binary">
+        <xs:attribute name="n" type="xs:base64Binary" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="HeaderList">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="H" type="j:KnownHeader"/>
+      <xs:element name="X" type="j:OtherHeader"/>
+      <xs:element name="R" type="j:RawHeader"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <!-- ===== ForwardRequest parts ===== -->
+
+  <xs:complexType name="SslInfo">
+    <xs:sequence>
+      <xs:element name="ClientCert" type="xs:base64Binary" minOccurs="0"/>
+      <xs:element name="ChainCert" type="xs:base64Binary" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="cipher" type="xs:string"/>
+    <xs:attribute name="keySize" type="xs:unsignedShort"/>
+    <xs:attribute name="protocol" type="xs:string"/>
+    <xs:attribute name="sessionId" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="EnvVar">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="n" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- ===== Messages: the global elements, one per frame ===== -->
+
+  <xs:element name="ForwardRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element name="Method" type="j:MethodName"/>
+          <xs:element name="ExtMethod" type="xs:string"/>
+        </xs:choice>
+        <xs:choice>
+          <xs:element name="Uri" type="xs:string"/>
+          <xs:element name="UriRaw" type="xs:base64Binary"/>
+        </xs:choice>
+        <xs:element name="Query" type="xs:string" minOccurs="0"/>
+        <xs:element name="Headers" type="j:HeaderList"/>
+        <xs:element name="Ssl" type="j:SslInfo" minOccurs="0"/>
+        <xs:element name="Env" type="j:EnvVar" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="Body" type="xs:base64Binary" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="authType" type="xs:string"/>
+      <!-- -1: length unknown (chunked); absent: no body. -->
+      <xs:attribute name="bodyLength" type="xs:long"/>
+      <xs:attribute name="isSsl" type="xs:boolean" use="required"/>
+      <xs:attribute name="localAddr" type="xs:string"/>
+      <xs:attribute name="localPort" type="xs:unsignedShort"/>
+      <!-- r->proto_num: 1000 * major + minor, e.g. 1001 for HTTP/1.1. -->
+      <xs:attribute name="proto" type="xs:unsignedShort" use="required"/>
+      <xs:attribute name="remoteAddr" type="xs:string" use="required"/>
+      <xs:attribute name="remotePort" type="xs:unsignedShort" use="required"/>
+      <xs:attribute name="remoteUser" type="xs:string"/>
+      <xs:attribute name="route" type="xs:string"/>
+      <xs:attribute name="serverName" type="xs:string" use="required"/>
+      <xs:attribute name="serverPort" type="xs:unsignedShort" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Request or response body bytes. No attributes, ever (see the header). -->
+  <xs:element name="BodyChunk" type="xs:base64Binary"/>
+
+  <!-- The worker asks for up to max bytes of request body. -->
+  <xs:element name="GetBodyChunk">
+    <xs:complexType>
+      <xs:attribute name="max" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="SendHeaders">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Headers" type="j:HeaderList"/>
+      </xs:sequence>
+      <xs:attribute name="reason" type="xs:string"/>
+      <xs:attribute name="status" type="j:Status" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="EndResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Trailers" type="j:HeaderList" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="reuse" type="xs:boolean" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="CPing">
+    <xs:complexType/>
+  </xs:element>
+
+  <xs:element name="CPong">
+    <xs:complexType/>
+  </xs:element>
+
+  <xs:element name="Shutdown">
+    <xs:complexType>
+      <xs:attribute name="graceful" type="xs:boolean" use="required"/>
+      <xs:attribute name="reason" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Error">
+    <xs:complexType>
+      <xs:attribute name="code" type="xs:unsignedShort" use="required"/>
+      <xs:attribute name="message" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

@@ -1,0 +1,1 @@
+<Shutdown xmlns="urn:jl:proto:2" graceful="true" reason="restart"/>

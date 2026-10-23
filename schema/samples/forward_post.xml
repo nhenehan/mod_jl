@@ -1,0 +1,11 @@
+<ForwardRequest xmlns="urn:jl:proto:2" bodyLength="11" isSsl="true" localAddr="10.0.0.1" localPort="443" proto="2000" remoteAddr="::1" remotePort="40000" remoteUser="alice" serverName="example.org" serverPort="443" authType="Basic">
+  <ExtMethod>BREW</ExtMethod>
+  <Uri>/coffee</Uri>
+  <Headers>
+    <H n="content-type">application/octet-stream</H>
+    <H n="content-length">11</H>
+  </Headers>
+  <Ssl cipher="TLS_AES_128_GCM_SHA256" keySize="128" protocol="TLSv1.3"/>
+  <Env n="UNIQUE_ID">Zx1</Env>
+  <Body>SGVsbG8gV29ybGQ=</Body>
+</ForwardRequest>

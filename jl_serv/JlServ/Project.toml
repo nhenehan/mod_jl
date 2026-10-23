@@ -1,0 +1,26 @@
+name = "JlServ"
+uuid = "042fbe05-d103-4838-91eb-ac56d2d94998"
+version = "0.1.0"
+authors = ["Nathan Henehan <nhenehan@acm.org>"]
+
+[deps]
+JExi = "6c138e09-6d40-4d74-9105-bc5e8df82c36"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[compat]
+PrecompileTools = "1"
+SHA = "0.7"
+Sockets = "1"
+JExi = "0.1"
+julia = "1.11"
+
+[sources]
+JExi = {url = "https://github.com/nhenehan/jexi", rev = "v0.1.0"}
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

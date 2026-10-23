@@ -1,0 +1,45 @@
+# httpd for tests/httpd/test_pool.sh: one JlServ worker on @WORK@/j1.sock,
+# reached through JlWorkers with different pool and ping settings, each on
+# its own prefix. run-httpd.sh fills in @WORK@, @PORT@, @MODULE@ and @SECRET@.
+ServerRoot "@WORK@"
+DefaultRuntimeDir "@WORK@/run"
+PidFile "@WORK@/run/httpd.pid"
+Mutex file:@WORK@/run default
+ServerName localhost
+Listen 127.0.0.1:@PORT@
+
+LoadModule mpm_event_module /usr/lib/apache2/modules/mod_mpm_event.so
+# Without an authz module httpd refuses every request ("couldn't check user").
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule jl_module "@MODULE@"
+
+StartServers 1
+ServerLimit 1
+ThreadsPerChild 16
+MaxRequestWorkers 16
+Timeout 60
+# wrk counts the close after MaxKeepAliveRequests (default 100) as a read error.
+MaxKeepAliveRequests 0
+
+ErrorLog "@WORK@/error_log"
+LogLevel warn jl:trace1
+LogFormat "%h \"%r\" %>s %b %D" t
+CustomLog "@WORK@/access_log" t
+DocumentRoot "@WORK@/htdocs"
+
+# The defaults: one connection per thread, ping_mode CI.
+JlWorker j1 unix:@WORK@/j1.sock secret=@SECRET@
+# A CPing before every request, and a short ping_timeout.
+JlWorker jping unix:@WORK@/j1.sock secret=@SECRET@ ping_mode=A ping_timeout=1
+# A CPing only after a second idle.
+JlWorker jint unix:@WORK@/j1.sock secret=@SECRET@ ping_mode=I connection_ping_interval=1
+# One connection, and a short wait for it.
+JlWorker jone unix:@WORK@/j1.sock secret=@SECRET@ connection_pool_size=1 connection_acquire_timeout=200ms
+# Idle connections closed after a second.
+JlWorker jttl unix:@WORK@/j1.sock secret=@SECRET@ connection_pool_timeout=1
+
+JlMount /j1/* j1
+JlMount /jping/* jping
+JlMount /jint/* jint
+JlMount /jone/* jone
+JlMount /jttl/* jttl

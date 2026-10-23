@@ -1,0 +1,60 @@
+#!/usr/bin/env -S julia --startup-file=no
+# Runs a JlServ worker.
+#
+#   julia --project=jl_serv/JlServ -t 8,1 jl_serv/JlServ/bin/jlserv APP.jl
+#         [--unix PATH] [--tcp [HOST:]PORT] [--name NAME] [--max-frame N]
+#         [--warmup PATH[,PATH...]]
+#
+# APP.jl is included; its last expression is the handler (a function of a
+# Request, or a Router). The secret comes from JL_SECRET. Ctrl-C drains.
+
+using JlServ
+import Base.CoreLogging as CL
+
+# Output to a redirected stderr is only written out at exit, so a worker
+# that is killed would leave an empty log. Flush after every message.
+struct FlushingLogger{L<:CL.AbstractLogger} <: CL.AbstractLogger
+    inner::L
+end
+CL.min_enabled_level(l::FlushingLogger) = CL.min_enabled_level(l.inner)
+CL.shouldlog(l::FlushingLogger, args...) = CL.shouldlog(l.inner, args...)
+CL.catch_exceptions(l::FlushingLogger) = CL.catch_exceptions(l.inner)
+function CL.handle_message(l::FlushingLogger, args...; kw...)
+    CL.handle_message(l.inner, args...; kw...)
+    flush(stderr)
+end
+
+function main(args)
+    isempty(args) && (println(stderr,
+        "usage: jlserv APP.jl [--unix PATH] [--tcp [HOST:]PORT] [--name NAME] [--max-frame N] [--warmup PATH,...]");
+    exit(2))
+    app = abspath(args[1])
+    kw = Dict{Symbol,Any}(:name => get(ENV, "JLSERV_NAME", "jlserv"), :secret => get(ENV, "JL_SECRET", ""))
+    i = 2
+    while i <= length(args)
+        a, v = args[i], i < length(args) ? args[i+1] : ""
+        if a == "--unix"
+            kw[:unix] = v
+        elseif a == "--tcp"
+            host, port = occursin(':', v) ? split(v, ':'; limit = 2) : ("127.0.0.1", v)
+            kw[:tcp] = (host, parse(Int, port))
+        elseif a == "--name"
+            kw[:name] = v
+        elseif a == "--max-frame"
+            kw[:max_frame] = parse(Int, v)
+        elseif a == "--warmup"
+            kw[:warmup_paths] = split(v, ',')
+        else
+            println(stderr, "jlserv: unknown option $a")
+            exit(2)
+        end
+        i += 2
+    end
+    ENV["JLSERV_NAME"] = kw[:name]
+    CL.global_logger(FlushingLogger(CL.global_logger()))
+    handler = Base.include(Main, app)
+    # The app's methods are newer than main's world; serve from the latest.
+    Base.invokelatest(JlServ.serve, handler; kw...)
+end
+
+main(ARGS)

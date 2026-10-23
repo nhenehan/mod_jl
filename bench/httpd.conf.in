@@ -1,0 +1,33 @@
+# httpd for bench/run.sh: mod_jl in front of one JlServ worker on a Unix
+# socket, everything at its defaults. tests/httpd/run-httpd.sh fills in
+# @WORK@, @PORT@, @MODULE@ and @SECRET@.
+ServerRoot "@WORK@"
+DefaultRuntimeDir "@WORK@/run"
+PidFile "@WORK@/run/httpd.pid"
+Mutex file:@WORK@/run default
+ServerName localhost
+Listen 127.0.0.1:@PORT@
+
+LoadModule mpm_event_module /usr/lib/apache2/modules/mod_mpm_event.so
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule jl_module "@MODULE@"
+
+# One process with more threads than wrk has connections: with fewer, the
+# event MPM closes idle keep-alive connections, and wrk counts those as errors.
+ThreadLimit 128
+StartServers 1
+ServerLimit 1
+ThreadsPerChild 128
+MaxRequestWorkers 128
+MaxKeepAliveRequests 0
+LimitRequestBody 0
+
+ErrorLog "@WORK@/error_log"
+LogLevel warn
+DocumentRoot "@WORK@/htdocs"
+
+JlWorker j1 unix:@WORK@/j1.sock secret=@SECRET@
+JlMount /hello/* j1
+JlMount /bytes/* j1
+JlMount /count j1
+JlMount /zeros/* j1

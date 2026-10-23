@@ -1,0 +1,13 @@
+[book]
+title = "mod_jl and JlServ"
+description = "Serving Julia applications behind Apache httpd"
+authors = ["Nathan Henehan"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"

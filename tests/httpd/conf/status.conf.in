@@ -1,0 +1,62 @@
+# httpd for tests/httpd/test_status.sh: three JlServ workers (lb_app.jl)
+# behind one balancer, a writable /jl-status and a read-only /jl-status-ro.
+# @WATCHDOG@ is JlWatchdogInterval (0: off); @MPM@ is event or prefork.
+ServerRoot "@WORK@"
+DefaultRuntimeDir "@WORK@/run"
+PidFile "@WORK@/run/httpd.pid"
+Mutex file:@WORK@/run default
+ServerName localhost
+Listen 127.0.0.1:@PORT@
+
+LoadModule mpm_@MPM@_module /usr/lib/apache2/modules/mod_mpm_@MPM@.so
+LoadModule authz_core_module /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule authz_host_module /usr/lib/apache2/modules/mod_authz_host.so
+LoadModule slotmem_shm_module /usr/lib/apache2/modules/mod_slotmem_shm.so
+LoadModule jl_module "@MODULE@"
+
+<IfModule mpm_event_module>
+    StartServers 1
+    ServerLimit 1
+    ThreadsPerChild 16
+    MaxRequestWorkers 16
+</IfModule>
+<IfModule mpm_prefork_module>
+    StartServers 4
+    MinSpareServers 4
+    MaxSpareServers 4
+    ServerLimit 4
+    MaxRequestWorkers 4
+    KeepAlive Off
+</IfModule>
+Timeout 60
+
+ErrorLog "@WORK@/error_log"
+LogLevel warn jl:debug
+LogFormat "%h \"%r\" %>s %b %D" t
+CustomLog "@WORK@/access_log" t
+DocumentRoot "@WORK@/htdocs"
+
+JlWatchdogInterval @WATCHDOG@
+
+JlWorker j1 unix:@WORK@/j1.sock secret=@SECRET@
+JlWorker j2 unix:@WORK@/j2.sock secret=@SECRET@
+JlWorker j3 unix:@WORK@/j3.sock secret=@SECRET@
+
+# recover_time is long: only jl-status (recover) or the watchdog bring a
+# worker back within the test.
+JlBalancer lbreq method=Requests recover_time=60
+JlBalancerMember lbreq j1
+JlBalancerMember lbreq j2
+JlBalancerMember lbreq j3 lbfactor=2
+
+JlMount /req/* lbreq
+
+<Location "/jl-status">
+    SetHandler jl-status
+    JlStatusReadOnly Off
+    Require local
+</Location>
+<Location "/jl-status-ro">
+    SetHandler jl-status
+    Require local
+</Location>

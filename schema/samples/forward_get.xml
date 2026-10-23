@@ -1,0 +1,12 @@
+<ForwardRequest xmlns="urn:jl:proto:2" isSsl="false" proto="1001" remoteAddr="127.0.0.1" remotePort="51234" route="j1" serverName="localhost" serverPort="18080">
+  <Method>GET</Method>
+  <Uri>/app/hello/world</Uri>
+  <Query>a=1&amp;b=2</Query>
+  <Headers>
+    <H n="host">localhost:18080</H>
+    <H n="user-agent">curl/8.5.0</H>
+    <H n="accept">*/*</H>
+    <X n="X-Trace">abc123</X>
+    <H n="cookie">JSESSIONID=abc.j1</H>
+  </Headers>
+</ForwardRequest>

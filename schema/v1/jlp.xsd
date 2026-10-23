@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- Enumerated HTTP Methods -->
+  <xs:simpleType name="HttpMethod">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="GET"/>
+      <xs:enumeration value="POST"/>
+      <xs:enumeration value="PUT"/>
+      <xs:enumeration value="PATCH"/>
+      <xs:enumeration value="DELETE"/>
+      <xs:enumeration value="OPTIONS"/>
+      <xs:enumeration value="HEAD"/>
+      <xs:enumeration value="TRACE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- HTTP version as integer (example: 11 for 1.1, 20 for 2.0) -->
+  <xs:simpleType name="HttpVersion">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="10"/>
+      <xs:maxInclusive value="30"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- URI represented as integer identifier -->
+  <xs:simpleType name="UriId">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Standard known header names -->
+  <xs:simpleType name="StandardHeaderName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Host"/>
+      <xs:enumeration value="Accept"/>
+      <xs:enumeration value="Accept-Encoding"/>
+      <xs:enumeration value="Accept-Language"/>
+      <xs:enumeration value="User-Agent"/>
+      <xs:enumeration value="Connection"/>
+      <xs:enumeration value="Content-Type"/>
+      <xs:enumeration value="Content-Length"/>
+      <xs:enumeration value="Cache-Control"/>
+      <xs:enumeration value="Authorization"/>
+      <xs:enumeration value="Cookie"/>
+      <xs:enumeration value="Set-Cookie"/>
+      <xs:enumeration value="Date"/>
+      <xs:enumeration value="Server"/>
+      <xs:enumeration value="Location"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Known Header -->
+  <xs:complexType name="StandardHeader">
+    <xs:sequence>
+      <xs:element name="Name" type="StandardHeaderName"/>
+      <xs:element name="Value" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Custom Header (any string name) -->
+  <xs:complexType name="CustomHeader">
+    <xs:sequence>
+      <xs:element name="Name" type="xs:string"/>
+      <xs:element name="Value" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Combined headers -->
+  <xs:complexType name="Headers">
+    <xs:sequence>
+      <xs:element name="StandardHeader" type="StandardHeader"
+                  minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="CustomHeader" type="CustomHeader"
+                  minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Raw octet body using base64 -->
+  <xs:complexType name="OctetBody">
+    <xs:simpleContent>
+      <xs:extension base="xs:base64Binary"/>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- HTTP Request -->
+  <xs:complexType name="HttpRequest">
+    <xs:sequence>
+      <xs:element name="Method" type="HttpMethod"/>
+      <xs:element name="URI" type="UriId"/>
+      <xs:element name="Version" type="HttpVersion"/>
+      <xs:element name="Headers" type="Headers" minOccurs="0"/>
+      <xs:element name="Body" type="OctetBody" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Status codes -->
+  <xs:simpleType name="StatusCode">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="100"/>
+      <xs:maxInclusive value="599"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- HTTP Response -->
+  <xs:complexType name="HttpResponse">
+    <xs:sequence>
+      <xs:element name="Version" type="HttpVersion"/>
+      <xs:element name="StatusCode" type="StatusCode"/>
+      <xs:element name="ReasonPhrase" type="xs:string"/>
+      <xs:element name="Headers" type="Headers" minOccurs="0"/>
+      <xs:element name="Body" type="OctetBody" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
