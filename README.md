@@ -63,7 +63,67 @@ magic 0x4A | major 0x02 | type u8 | flags u8 | req_id u32 BE | len u32 BE
   that prefix from their codec at startup and check it before use, then write
   and read body bytes without a codec call.
 
+## Dev container
+
+Everything mod_jl needs to build and test is in a podman container: Apache
+httpd and its headers, a C toolchain, CMake and Ninja, Rust, Julia 1.12.7,
+gdb, valgrind, curl, wrk and jq. On your machine you need only **podman** and
+this checkout.
+
+`ct/dev.sh` runs one command in the container, in the checkout:
+
+```bash
+ct/dev.sh <command> [args...]   # run a command in /src/mod_jl
+ct/dev.sh                       # an interactive shell instead
+ct/dev.sh build                 # rebuild the image, after editing ct/Containerfile
+```
+
+- The first run builds the image, `localhost/mod_jl-dev`. That takes a few
+  minutes, once.
+- Your checkout is mounted read-write at `/src/mod_jl`. Build directories
+  you make there are on your disk and survive the container.
+- Commands run as you, not as root, so the files they write are yours.
+- Julia's packages and cargo's registry live in the podman volume
+  `mod_jl-depot`, made on the first run, so they are downloaded once.
+
+### First time: install the Julia packages
+
+Do this once, and again whenever the `mod_jl-depot` volume is new (the first
+run, or after you delete it):
+
+```bash
+ct/dev.sh julia --project=jl_serv/JlServ -e 'using Pkg; Pkg.instantiate()'
+```
+
+It downloads JlServ's packages, jexi among them. **Skip it and every test
+that starts a Julia worker fails**, with "Package JExi ... is required but
+does not seem to be installed". It may end with "3 dependencies precompiled
+but different versions are currently loaded"; that is harmless.
+
+### Build and run every test
+
+```bash
+ct/dev.sh cmake -S . -B build-ct -G Ninja -DCMAKE_BUILD_TYPE=Debug -DJL_BUILD_MODULE=ON
+ct/dev.sh cmake --build build-ct
+ct/dev.sh ctest --test-dir build-ct --output-on-failure
+ct/dev.sh julia --project=jl_serv/JlServ -e 'using Pkg; Pkg.test()'
+```
+
+The first build also fetches and compiles rexi, which takes a minute or two.
+All 12 ctests should pass, then JlServ's own tests.
+
+### Starting over
+
+```bash
+podman volume rm mod_jl-depot     # forget Julia packages and cargo's registry; then redo "First time"
+podman rmi localhost/mod_jl-dev   # forget the image; the next run rebuilds it
+```
+
 ## Commands
+
+The same commands work on your own machine if it has the tools, or inside
+`ct/dev.sh`. Before the first test run, install the Julia packages:
+`julia --project=jl_serv/JlServ -e 'using Pkg; Pkg.instantiate()'`.
 
 ```bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DJL_SANITIZE=ON

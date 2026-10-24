@@ -22,7 +22,8 @@ This chapter takes you from nothing to a running worker answering requests.
   ```
 
   If you'd rather not install these, `ct/dev.sh` runs commands in a
-  container that has them all (see the repository README).
+  container that has them all; you need only podman. See *Dev container*
+  in the repository README for the first-time setup.
 
 ## 1. Make a project for your application
 

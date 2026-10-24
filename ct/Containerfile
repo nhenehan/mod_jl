@@ -29,8 +29,9 @@ RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-to
 RUN apt-get update && apt-get install -y --no-install-recommends jq \
     && rm -rf /var/lib/apt/lists/*
 
-# Debian's apache2 runs as www-data with its own config; the tests use their own
-# config under build-*/t, started as the invoking user.
+# Debian's apache2 runs as www-data with its own config; the tests write their
+# own config into a temporary work directory and start httpd as the invoking
+# user.
 ENV JULIA_DEPOT_PATH=/depot/julia
 
 WORKDIR /src/mod_jl
