@@ -47,8 +47,10 @@ return a string (`200`), bytes (`200`, `application/octet-stream`) or
 | `setstatus!(s, status, reason = nothing)` | set the status, before the first write |
 | `setheader!(s, name => value)` | add a header, before the first write |
 | `startwrite(s)` | send the status and headers now |
+| `write_response(s, r::Response)` | answer with a whole `Response` instead, before anything is written (for example an error, from a streaming route) |
 | `write`, `print`, `println` | write body bytes |
 | `flush(s)` | send buffered output and ask Apache to pass it on now |
+| `draining(s)` | whether the worker is shutting down: a long-lived stream should finish |
 | `read`, `eof`, `readavailable` | read the request body |
 | `s.request` | the `Request` |
 

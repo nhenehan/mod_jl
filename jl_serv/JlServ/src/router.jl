@@ -16,8 +16,8 @@ end
 """
     Router(; fallback)
 
-`fallback(req)` runs when nothing matches; by default a 404 (or a 405 when the
-path matches under another method).
+`fallback(req)` runs when nothing matches; by default a 404, or a 405 with an
+`Allow` field listing the methods the path's routes take (RFC 9110 15.5.6).
 """
 struct Router
     routes::Vector{Route}
@@ -57,14 +57,40 @@ function match_route(rt::Route, segs::Vector{SubString{String}})
     return params
 end
 
+target_segments(target::AbstractString) = [x for x in split(target, '/') if !isempty(x)]
+
+"""
+    allowed_methods(r::Router, target) -> Vector{String}
+
+The methods the routes matching `target`'s path take, in a fixed order (`HEAD`
+with `GET`); empty when no route matches the path. A `"*"` route gives `["*"]`.
+"""
+function allowed_methods(r::Router, target::AbstractString)
+    segs = target_segments(target)
+    ms = Set{String}()
+    for rt in r.routes
+        match_route(rt, segs) === nothing && continue
+        isempty(rt.method) && return ["*"]
+        push!(ms, rt.method)
+        rt.method == "GET" && push!(ms, "HEAD")
+    end
+    order = ("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+    return sort!(collect(ms); by = m -> (something(findfirst(==(m), order), length(order) + 1), m))
+end
+
+"""The default answer when no route takes the request: 404, or 405 with `Allow`."""
+function unmatched_response(r::Router, target::AbstractString)
+    allow = allowed_methods(r, target)
+    isempty(allow) && return Response(404, ["content-type" => "text/plain"], "Not Found\n")
+    return Response(405, ["content-type" => "text/plain", "allow" => join(allow, ", ")], "Method Not Allowed\n")
+end
+
 function handle(r::Router, s::Stream)
     req = s.request
-    segs = [x for x in split(req.target, '/') if !isempty(x)]
-    path_ok = false
+    segs = target_segments(req.target)
     for rt in r.routes
         params = match_route(rt, segs)
         params === nothing && continue
-        path_ok = true
         (isempty(rt.method) || rt.method == req.method || (rt.method == "GET" && req.method == "HEAD")) || continue
         if rt.stream
             rt.f(s, params)
@@ -73,11 +99,6 @@ function handle(r::Router, s::Stream)
         end
         return nothing
     end
-    if r.fallback !== nothing
-        write_response(s, to_response(r.fallback(req)))
-    else
-        st = path_ok ? 405 : 404
-        write_response(s, Response(st, ["content-type" => "text/plain"], path_ok ? "Method Not Allowed\n" : "Not Found\n"))
-    end
+    write_response(s, r.fallback !== nothing ? to_response(r.fallback(req)) : unmatched_response(r, req.target))
     return nothing
 end

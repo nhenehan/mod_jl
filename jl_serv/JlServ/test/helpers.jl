@@ -42,3 +42,35 @@ end
     JlServ.handle_request(c, JlServ.read_frame!(c))
     @test occursin(r"^[0-9a-f]{32}\.j2$", seen[5])
 end
+
+@testset "router: 404, and 405 with Allow" begin
+    app = Router()
+    route!((req, p) -> "x", app, "GET", "/cars/{vin}")
+    route!((req, p) -> "x", app, "DELETE", "/cars/{vin}")
+    route!((req, p) -> "x", app, "PUT", "/cars/{vin}")
+    stream!((s, p) -> nothing, app, "POST", "/cars/{vin}/inspections")
+    @test JlServ.allowed_methods(app, "/cars/X") == ["GET", "HEAD", "PUT", "DELETE"]
+    @test JlServ.allowed_methods(app, "/cars/X/inspections") == ["POST"]
+    @test isempty(JlServ.allowed_methods(app, "/nope"))
+    r = JlServ.unmatched_response(app, "/cars/X")
+    @test r.status == 405
+    @test ("allow" => "GET, HEAD, PUT, DELETE") in r.headers
+    @test JlServ.unmatched_response(app, "/nope").status == 404
+    route!((req, p) -> "x", app, "*", "/any")
+    @test JlServ.allowed_methods(app, "/any") == ["*"]
+end
+
+@testset "draining(s) tells a stream the worker is stopping" begin
+    seen = Bool[]
+    app = Router()
+    stream!(app, "GET", "/app/hello/{name}") do s, p
+        push!(seen, draining(s))
+        write_response(s, Response("ok\n"))
+    end
+    head = JlServ.RequestHead(target = "/app/hello/x", remote_addr = "127.0.0.1", server_name = "t")
+    c = JlServ.replay_conn(app, JlServ.forward_frame(JlServ.encode_forward(head)))
+    JlServ.handle_request(c, JlServ.read_frame!(c))
+    c.server.draining = true
+    JlServ.handle_request(c, JlServ.read_frame!(c))
+    @test seen == [false, true]
+end

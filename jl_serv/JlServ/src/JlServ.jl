@@ -12,7 +12,7 @@ import Sockets
 using SHA: sha256
 
 export Request, Response, Headers, Router, Stream, RequestBody
-export route!, stream!, setstatus!, setheader!, startwrite, header, headers, hasheader
+export route!, stream!, setstatus!, setheader!, startwrite, write_response, draining, header, headers, hasheader
 export serve, start, shutdown!, warmup
 export unescapeuri, queryparams, session_id
 

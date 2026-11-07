@@ -212,6 +212,17 @@ Base.read(s::Stream, ::Type{UInt8}) = read(s.request.body, UInt8)
 Base.readavailable(s::Stream) = readavailable(s.request.body)
 Base.isopen(s::Stream) = !s.conn.closed
 
+"""
+    draining(s::Stream) -> Bool
+
+Whether the worker is shutting down. A long-lived response (an event stream,
+a long poll) should then finish: the drain waits for it, up to its timeout.
+"""
+function draining(s::Stream)
+    srv = s.conn.server
+    return srv !== nothing && hasproperty(srv, :draining) && srv.draining
+end
+
 # A body whose bytes are contiguous in memory goes out without a copy.
 function write_bytes(s::Stream, b::Union{String,Vector{UInt8}})
     any(p -> lowercase_eq(p.first, "content-length"), s.headers) ||

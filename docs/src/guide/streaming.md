@@ -29,8 +29,10 @@ request body from:
 | `setstatus!(s, code[, reason])` | sets the status (default `200`) |
 | `setheader!(s, name => value)` | adds a response header |
 | `startwrite(s)` | sends the status and headers now |
+| `write_response(s, r)` | answers with a whole `Response` instead; only before anything is written |
 | `write(s, x)`, `print(s, x)`, `println(s, x)` | writes body bytes |
 | `flush(s)` | sends what's buffered **and** asks Apache to pass it to the client now |
+| `draining(s)` | `true` once the worker is shutting down; an endless stream (events, long polls) should then end, or the drain waits for it until its timeout |
 | `read(s, ...)`, `eof(s)`, `readavailable(s)` | reads the request body |
 | `s.request` | the `Request` |
 

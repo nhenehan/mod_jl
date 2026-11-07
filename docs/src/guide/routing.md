@@ -54,7 +54,9 @@ The method is matched exactly (`"GET"`, `"POST"`, `"PUT"`, `"DELETE"`, ...).
 
 - If no route matches the path, the answer is `404 Not Found`.
 - If a route matches the path but not the method, the answer is
-  `405 Method Not Allowed`.
+  `405 Method Not Allowed`, with an `Allow` field listing the methods the
+  path's routes take (`HEAD` included when there is a `GET`), as
+  RFC 9110 requires.
 
 To handle unmatched requests yourself (a custom 404 page, or passing
 everything else to another handler), give a fallback. It gets just the

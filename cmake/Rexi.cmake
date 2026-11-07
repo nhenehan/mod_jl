@@ -6,7 +6,7 @@
 include(FetchContent)
 FetchContent_Declare(rexi
     GIT_REPOSITORY https://github.com/nhenehan/rexi.git
-    GIT_TAG v0.1.0
+    GIT_TAG v0.2.0
     GIT_SHALLOW TRUE)
 # rexi has no CMakeLists.txt: this only fetches it.
 FetchContent_MakeAvailable(rexi)

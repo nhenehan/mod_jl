@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "ca364b78039da30e072ff111e18e6c9279da9eca"
+project_hash = "bb55372c65af34973fab6e6fb64c0f6cb85f0ed6"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -11,17 +11,17 @@ version = "1.11.0"
 
 [[deps.JExi]]
 deps = ["PrecompileTools", "XML"]
-git-tree-sha1 = "ce1eb6214af4a8df6bae828cafaae2260ab3eda3"
-repo-rev = "v0.1.0"
+git-tree-sha1 = "bf22249adfadf9b1415f63046ac319732452e079"
+repo-rev = "v0.2.0"
 repo-url = "https://github.com/nhenehan/jexi"
 uuid = "6c138e09-6d40-4d74-9105-bc5e8df82c36"
-version = "0.1.0"
+version = "0.2.0"
 
 [[deps.JlServ]]
 deps = ["JExi", "PrecompileTools", "SHA", "Sockets"]
 path = "."
 uuid = "042fbe05-d103-4838-91eb-ac56d2d94998"
-version = "0.1.0"
+version = "0.2.0"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
