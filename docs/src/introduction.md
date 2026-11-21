@@ -81,6 +81,6 @@ Apache internals or the protocol; if you know mod_jk, start with
 [Coming from mod_jk](running/coming-from-mod_jk.md).
 
 mod_jl is a for-fun project, and a workout for two EXI codecs, rexi (Rust,
-inside the Apache module) and jexi (Julia, inside the workers). It aims to
+inside the Apache module) and EXIFormat (Julia, inside the workers). It aims to
 be readable and to work well, more than to be the fastest way to put Julia
 on the web.

@@ -7,7 +7,7 @@ schema/jlp2.xsd) and JlServ runs them through a handler.
 """
 module JlServ
 
-import JExi as J
+import EXIFormat as J
 import Sockets
 using SHA: sha256
 

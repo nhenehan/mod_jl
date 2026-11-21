@@ -1,7 +1,7 @@
 # Allocations per simple GET, worker side only. The transport replays one
 # ForwardRequest frame forever and discards the output, so nothing but the
 # worker's own work is counted. The plan's budget is 40; the connection's
-# reused decoder and encoder (JExi reset!) brought a GET from 62 to 29.
+# reused decoder and encoder (EXIFormat reset!) brought a GET from 62 to 29.
 # The Router adds path splitting and the params Dict on top.
 
 # The transport (JlServ.ReplayIO) lives in src/warmup.jl.
@@ -43,7 +43,7 @@ head_fields(r) = (r.method, r.target, r.query, collect(r.headers), r.proto, r.is
     many = JlServ.RequestHead(method = "PUT", target = "/a/b%20c", query = "x=1&y=2", remote_addr = "10.0.0.9",
         server_name = "example.org", route = "j3", body_length = -1, remote_user = "ada",
         headers = JlServ.Headers(vcat(["host" => "example.org", "accept" => "*/*"],
-            ["x-h$i" => "value $i" for i in 1:24])),   # well past JExi's 16-value scan limit
+            ["x-h$i" => "value $i" for i in 1:24])),   # well past EXIFormat's 16-value scan limit
         env = ["UNIQUE_ID" => "abc", "SSL_X" => "y"])
     few = JlServ.RequestHead(target = "/", remote_addr = "127.0.0.1", server_name = "localhost",
         headers = JlServ.Headers(["x-h3" => "value 3", "host" => "localhost"]))  # values seen in `many`

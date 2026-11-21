@@ -44,7 +44,7 @@ binary XML format, in its strict, schema-informed form:
   have their own elements, and header bytes that aren't valid UTF-8 travel
   as raw bytes.
 - **Two codecs, one schema.** The Apache side uses rexi (Rust) and the
-  workers use jexi (Julia), each built from the same XSD. Every message is
+  workers use EXIFormat (Julia), each built from the same XSD. Every message is
   a round trip between two independent EXI implementations, which is half
   the fun of this project; the test suite checks that both produce the same
   bytes.

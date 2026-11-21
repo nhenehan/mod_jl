@@ -6,8 +6,8 @@ This chapter takes you from nothing to a running worker answering requests.
 
 - **Julia 1.11 or newer.**
 - A checkout of this repository. It needs nothing next to it: JlServ gets
-  its EXI codec, [jexi](https://github.com/nhenehan/jexi), through Julia's
-  package manager, and the C side's,
+  its EXI codec, [EXIFormat](https://github.com/nhenehan/EXIFormat.jl),
+  from Julia's General registry, and the C side's,
   [rexi](https://github.com/nhenehan/rexi), is fetched by CMake. Both come
   from a tagged release.
 

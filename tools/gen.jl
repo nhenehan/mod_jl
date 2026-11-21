@@ -3,12 +3,12 @@
 #
 #   libjlproto/src/gen/jlp_vocab.h, jlp_vocab.c   C name tables and lookups
 #   jl_serv/JlServ/src/gen/vocab.jl               Julia name tables and the hash
-#   jl_serv/JlServ/src/gen/jlp_tables.jl          JExi static grammar tables
+#   jl_serv/JlServ/src/gen/jlp_tables.jl          EXIFormat static grammar tables
 #
 # Usage: julia --project=jl_serv/JlServ tools/gen.jl [--check]
 # With --check nothing is written; the exit status is 1 if any file is stale.
 
-using JExi
+using EXIFormat
 using SHA
 
 const ROOT = dirname(@__DIR__)
@@ -144,7 +144,7 @@ function main(args)
         end
     end
     tables = joinpath(JL_DIR, "jlp_tables.jl")
-    fresh = JExi.SchemaGen.generate([XSD]; out = tables, name = "TABLES", module_name = "JlpTables", check)
+    fresh = EXIFormat.SchemaGen.generate([XSD]; out = tables, name = "TABLES", module_name = "JlpTables", check)
     fresh || push!(stale, tables)
     if check
         isempty(stale) && (println("vocab: up to date"); return 0)
