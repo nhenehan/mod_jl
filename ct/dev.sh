@@ -5,9 +5,9 @@
 #   ct/dev.sh                  interactive shell
 #   ct/dev.sh <cmd> [args...]  run a command in /src/mod_jl
 #
-# Mounts mod_jl read-write at /src/mod_jl. rexi and jexi are fetched from
-# GitHub by CMake and Julia's Pkg; the Julia depot and cargo's registry live
-# in the volume mod_jl-depot.
+# Mounts mod_jl read-write at /src/mod_jl. CMake fetches rexi from GitHub and
+# Julia's Pkg gets EXIFormat from the General registry; the Julia depot and
+# cargo's registry live in the volume mod_jl-depot.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(dirname "$here")

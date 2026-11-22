@@ -8,7 +8,7 @@ that has it; route around a worker that fails, and take it back when it
 recovers. mod_jl does the same for Julia worker processes (JlServ).
 
 It is a for-fun project, and a workout for two EXI codecs: rexi (Rust, on the
-Apache side) and jexi (Julia, on the worker side). Where mod_jk speaks AJP, a
+Apache side) and EXIFormat (Julia, on the worker side). Where mod_jk speaks AJP, a
 binary protocol, mod_jl speaks **jlp**: HTTP-as-XML (`schema/jlp2.xsd`)
 encoded as strict, byte-aligned, schema-informed EXI. So a request head
 travels smaller than its HTTP/1.1 text, which helps on thin links between
@@ -34,9 +34,9 @@ mod_jk* maps the familiar `workers.properties` settings to mod_jl's.
 |---|---|
 | `schema/jlp2.xsd` | The vocabulary. Enum order is the wire format. `schema/v1/` keeps the original draft. |
 | `schema/samples/` | One instance of every message. `tools/make-vectors.sh` turns them into `testdata/vectors/*.exi` with the rexi CLI; these are the reference bytes both sides must match. |
-| `tools/gen.jl` | Generates the C/Julia vocab tables and the JExi static tables from the XSD (`--check` to verify). |
+| `tools/gen.jl` | Generates the C/Julia vocab tables and the EXIFormat static tables from the XSD (`--check` to verify). |
 | `libjlproto/` | C: framing, HELLO, ForwardRequest encode, worker-message decode, and the byte templates. Built on rexi-capi. |
-| `jl_serv/JlServ/` | Julia worker package, built on JExi. |
+| `jl_serv/JlServ/` | Julia worker package, built on EXIFormat. |
 | `jl_client/` | `jlc`, the C test client: talks to a worker without Apache. |
 | `mod_jl/` | The httpd module: directives, mounts, the connection pool, balancing, shared state, `jl-status` and the watchdog. |
 | `tests/` | Codec tests against the vectors, `jlc`-to-worker end-to-end tests, and the valgrind wrappers. |
@@ -95,8 +95,8 @@ run, or after you delete it):
 ct/dev.sh julia --project=jl_serv/JlServ -e 'using Pkg; Pkg.instantiate()'
 ```
 
-It downloads JlServ's packages, jexi among them. **Skip it and every test
-that starts a Julia worker fails**, with "Package JExi ... is required but
+It downloads JlServ's packages, EXIFormat among them. **Skip it and every test
+that starts a Julia worker fails**, with "Package EXIFormat ... is required but
 does not seem to be installed". It may end with "3 dependencies precompiled
 but different versions are currently loaded"; that is harmless.
 
@@ -137,9 +137,9 @@ cmake --build build --target rexi-cli && tools/make-vectors.sh   # after changin
 cmake -S . -B build-rel -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build-rel && (cd . && build-rel/tests/bench_codec)
 ```
 
-rexi and jexi come from tagged releases on GitHub: CMake fetches rexi
-(`cmake/Rexi.cmake`) and builds it inside the build directory, and JlServ's
-`Project.toml` names jexi in its `[sources]`. To build against a local rexi
+rexi and EXIFormat come from tagged releases: CMake fetches rexi from GitHub
+(`cmake/Rexi.cmake`) and builds it inside the build directory, and JlServ gets
+EXIFormat from Julia's General registry. To build against a local rexi
 checkout instead, configure with `-DFETCHCONTENT_SOURCE_DIR_REXI=/path/to/rexi`.
 
 The valgrind tests run `test_codec` and every `jlc` of the e2e and examples
@@ -156,5 +156,5 @@ the 1 GiB transfers. The module build needs
 
 ## License
 
-Apache-2.0, see [LICENSE](LICENSE). rexi and jexi, which the build fetches,
+Apache-2.0, see [LICENSE](LICENSE). rexi and EXIFormat, which the build fetches,
 are BSD-3-Clause.

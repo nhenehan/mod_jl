@@ -2,32 +2,30 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "bb55372c65af34973fab6e6fb64c0f6cb85f0ed6"
+project_hash = "3f26bf3cb295fb850e5aaba0fd2f6c4936ac8590"
 
 [[deps.Dates]]
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 version = "1.11.0"
 
-[[deps.JExi]]
+[[deps.EXIFormat]]
 deps = ["PrecompileTools", "XML"]
-git-tree-sha1 = "bf22249adfadf9b1415f63046ac319732452e079"
-repo-rev = "v0.2.0"
-repo-url = "https://github.com/nhenehan/jexi"
+git-tree-sha1 = "36505a28fc6e20d7773a730686d066955f2d5711"
 uuid = "6c138e09-6d40-4d74-9105-bc5e8df82c36"
-version = "0.2.0"
+version = "0.1.0"
 
 [[deps.JlServ]]
-deps = ["JExi", "PrecompileTools", "SHA", "Sockets"]
+deps = ["EXIFormat", "PrecompileTools", "SHA", "Sockets"]
 path = "."
 uuid = "042fbe05-d103-4838-91eb-ac56d2d94998"
 version = "0.2.0"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "edbeefc7a4889f528644251bdb5fc9ab5348bc2c"
+git-tree-sha1 = "1e697ad6f68af89cd3651bbe9b4a7b5d800adf5a"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.3.4"
+version = "1.4.0"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -58,12 +56,14 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 version = "1.11.0"
 
 [[deps.XML]]
-git-tree-sha1 = "92e8ddd9edfd0f374ec738689cbd1d50abfbf01e"
+git-tree-sha1 = "07d9237ceb838d987763ac2a5bcd4e29764ae153"
 uuid = "72c71f33-b9b6-44de-8c94-c961784809e2"
-version = "0.4.6"
+version = "0.4.10"
 
     [deps.XML.extensions]
     XMLAbstractTreesExt = "AbstractTrees"
+    XMLStringViewsExt = "StringViews"
 
     [deps.XML.weakdeps]
     AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+    StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
